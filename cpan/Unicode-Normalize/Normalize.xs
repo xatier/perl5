@@ -20,15 +20,24 @@
 #include "unfcmp.h"
 #include "unfexc.h"
 
-/* Perl 5.6.1 ? */
-#ifndef uvuni_to_utf8
-#define uvuni_to_utf8   uv_to_utf8
-#endif /* uvuni_to_utf8 */
+#ifdef NATIVE_SKIP
+    /* On modern Perls, the translation tables are stored in native order, so
+     * we want uvchr() instead of uvuni() */
+#   undef uvuni_to_utf8
+#   define uvuni_to_utf8    uvchr_to_utf8
+#   undef utf8n_to_uvuni
+#   define utf8n_to_uvuni   utf8n_to_uvchr
+#else
+    /* Perl 5.6.1 ? */
+#   ifndef uvuni_to_utf8
+#      define uvuni_to_utf8     uv_to_utf8
+#   endif /* uvuni_to_utf8 */
 
-/* Perl 5.6.1 ? */
-#ifndef utf8n_to_uvuni
-#define utf8n_to_uvuni   utf8_to_uv
-#endif /* utf8n_to_uvuni */
+    /* Perl 5.6.1 ? */
+#   ifndef utf8n_to_uvuni
+#       define utf8n_to_uvuni   utf8_to_uv
+#   endif /* utf8n_to_uvuni */
+#endif
 
 /* UTF8_ALLOW_BOM is used before Perl 5.8.0 */
 #ifndef UTF8_ALLOW_BOM
