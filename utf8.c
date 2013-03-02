@@ -434,11 +434,14 @@ Perl_is_utf8_string(const U8 *s, STRLEN len)
 		 return FALSE;
 	     }
 
+#ifdef IS_UTF8_CHAR
 	     if (IS_UTF8_CHAR_FAST(c)) {
 	         if (!IS_UTF8_CHAR(x, c))
 		     return FALSE;
 	     }
-	     else if (! is_utf8_char_slow(x, c)) {
+	     else
+#endif
+                if (! is_utf8_char_slow(x, c)) {
 		 return FALSE;
 	     }
 	     x = next_char_ptr;
@@ -494,10 +497,12 @@ Perl_is_utf8_string_loclen(const U8 *s, STRLEN len, const U8 **ep, STRLEN *el)
 	     if (next_char_ptr > send) {
 		 goto out;
 	     }
+#ifdef IS_UTF8_CHAR
 	     if (IS_UTF8_CHAR_FAST(c)) {
 	         if (!IS_UTF8_CHAR(x, c))
 		     c = 0;
 	     } else
+#endif
 	         c = is_utf8_char_slow(x, c);
 	     if (!c)
 	         goto out;

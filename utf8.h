@@ -626,7 +626,9 @@ Perl's extended UTF-8 means we can have start bytes up to FF.
  * (2) it allows code points past U+10FFFF.
  * The Perl_is_utf8_char() full "slow" code will handle the Perl
  * "extended UTF-8". */
-#define IS_UTF8_CHAR(p, n)      (is_UTF8_CHAR_utf8_safe(p, (p) + (n)) == n)
+#ifdef is_UTF8_CHAR_utf8_safe
+#   define IS_UTF8_CHAR(p, n)      (is_UTF8_CHAR_utf8_safe(p, (p) + (n)) == n)
+#endif
 
 /* regen/regcharclass.pl generates is_UTF8_CHAR_utf8_safe() macros for up to
  * these number of bytes.  So this has to be coordinated with it */
