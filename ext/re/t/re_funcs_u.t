@@ -79,7 +79,7 @@ if ('1234'=~/(?:(?<A>\d)|(?<C>!))(?<B>\d)(?<A>\d)(?<B>\d)/){
 
 {
     # tests for new regexp flags
-    my $text = "\xE4";
+    my $text = latin1_to_native("\xE4");
     my $check;
 
     {
