@@ -91,7 +91,8 @@ sub run_tests {
         ok 'goodfood' =~ $a,     "Reblessed qr // matches";
         is($a, '(?^:foo)', "Reblessed qr // stringifies");
         my $x = "\x{3fe}";
-        my $z = my $y = "\317\276";  # Byte representation of $x
+        my $z = my $y = byte_utf8a_to_utf8n("\317\276");  # Byte representation
+                                                          # of $x
         $a = qr /$x/;
         ok $x =~ $a, "UTF-8 interpolation in qr //";
         ok "a$a" =~ $x, "Stringified qr // preserves UTF-8";
@@ -695,7 +696,9 @@ sub run_tests {
 	    my $s = shift;
 	    $s =~ s{(.)}{
 			my $c = ord($1);
-			($c< 32 || $c > 127) ? sprintf("<0x%x>", $c) : $1;
+			(ord_native_to_latin1($c)< 32
+                         || ord_native_to_latin1($c) > 127)
+                        ? sprintf("<0x%x>", $c) : $1;
 		}ge;
 	    $s;
 	}
@@ -727,7 +730,7 @@ sub run_tests {
 		ok($ss =~ /^$cc/, fmt("plain      $u->[2]", $ss, $cc));
 
 		no strict;
-		my $chr41 = "\x41";
+		my $chr41 = latin1_to_native("\x41");
 		$ss = "$u->[0]\t${q}$chr41${b}x42$s";
 		$nine = $nine = "bad";
 		for my $use_qr ('', 'qr') {
