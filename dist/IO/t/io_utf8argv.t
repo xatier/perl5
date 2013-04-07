@@ -6,7 +6,6 @@ BEGIN {
 	exit 0;
     }
     require($ENV{PERL_CORE} ? "../../t/test.pl" : "./t/test.pl");
-    skip_all("Needs EBCDIC porting fcn to convert utf8 bytes to utfebcid)") if $::IS_EBCDIC;
 }
 
 use utf8;
@@ -15,11 +14,11 @@ use utf8;
 plan(tests => 2);
 
 open my $fh, ">:raw", 'io_utf8argv';
-print $fh
+print $fh byte_utf8a_to_utf8n(
    "\xce\x9c\xe1\xbd\xb7\xce\xb1\x20\xcf\x80\xe1\xbd\xb1\xcf\x80\xce".
    "\xb9\xce\xb1\x2c\x20\xce\xbc\xe1\xbd\xb0\x20\xcf\x80\xce\xbf\xce".
    "\xb9\xe1\xbd\xb0\x20\xcf\x80\xe1\xbd\xb1\xcf\x80\xce\xb9\xce\xb1".
-   "\xcd\xbe\x0a";
+   "\xcd\xbe\x0a");
 close $fh or die "close: $!";
 
 
