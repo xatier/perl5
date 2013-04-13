@@ -26,7 +26,7 @@ BEGIN {
 	# avoid using any global vars here:
 	if ($v =~ s/^\^(?=.)//) {
 	    for(substr $v, 0, 1) {
-		$_ = chr ord() - 64;
+		$_ = chr(ord_native_to_latin1(ord($_)) - 64);
 	    }
 	}
 	SKIP:
