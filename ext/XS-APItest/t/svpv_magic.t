@@ -32,7 +32,11 @@ is(eval { XS::APItest::first_byte($1) } || $@, 0303,
 sub TIESCALAR { bless [], shift }
 sub FETCH { ++$f; *{chr 255} }
 tie $t, "main";
-is SvPVutf8($t), "*main::\xc3\xbf",
+is SvPVutf8($t), (ord("A") == 65)
+                 ? "*main::\xc3\xbf"
+                 : ord('^') == 106    # Posix-BC
+                   ? "*main::\x5F"
+                   : "*main::\xff",
   'SvPVutf8 works with get-magic changing the SV type';
 is $f, 1, 'SvPVutf8 calls get-magic once';
 
@@ -43,7 +47,11 @@ package t {
 }
 tie $t, "t";
 undef $f;
-is SvPVutf8($t), "\xc3\xbf",
+is SvPVutf8($t), (ord("A") == 65)
+                 ? "\xc3\xbf"
+                 : ord('^') == 106    # Posix-BC
+                   ? "\x5F"
+                   : "\xff",
   'SvPVutf8 works with get-magic downgrading the SV';
 is $f, 1, 'SvPVutf8 calls get-magic once';
 ()="$t";
