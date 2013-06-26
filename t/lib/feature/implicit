@@ -119,7 +119,13 @@ nok
 use v5.15;
 print eval "use utf8; q|\xc5\xbf|" eq "\xc5\xbf" ? "ok\n" : "nok\n";
 use v5.8.8;
-print eval "use utf8; q|\xc5\xbf|" eq "\x{17f}" ? "ok\n" : "nok\n";
+if ($::IS_EBCDIC) {
+    # This is only for code page 1047
+    print eval "use utf8; q|\x8F\x7f|" eq "\x{17f}" ? "ok\n" : "nok\n";
+}
+else {
+    print eval "use utf8; q|\xc5\xbf|" eq "\x{17f}" ? "ok\n" : "nok\n";
+}
 EXPECT
 ok
 ok
