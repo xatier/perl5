@@ -3508,7 +3508,7 @@ S_study_chunk(pTHX_ RExC_state_t *pRExC_state, regnode **scanp,
 			flags &= ~SCF_DO_STCLASS_AND;
 			StructCopy(&accum, data->start_class, regnode_ssc);
 			flags |= SCF_DO_STCLASS_OR;
-                        SET_SSC_EOS(data->start_class);
+                        ANYOF_FLAGS(data->start_class);
 		    }
 		}
 
@@ -4172,7 +4172,7 @@ S_study_chunk(pTHX_ RExC_state_t *pRExC_state, regnode **scanp,
 			flags &= ~SCF_DO_STCLASS_AND;
 			StructCopy(&this_class, data->start_class, regnode_ssc);
 			flags |= SCF_DO_STCLASS_OR;
-                        SET_SSC_EOS(data->start_class);
+                        ANYOF_FLAGS(data->start_class) |= ANYOF_EMPTY_STRING;
 		    }
 		} else {		/* Non-zero len */
 		    if (flags & SCF_DO_STCLASS_OR) {
@@ -5004,7 +5004,7 @@ PerlIO_printf(Perl_debug_log, "LHS=%"UVdf" RHS=%"UVdf"\n",
                     flags &= ~SCF_DO_STCLASS_AND;
                     StructCopy(&accum, data->start_class, regnode_ssc);
                     flags |= SCF_DO_STCLASS_OR;
-                    SET_SSC_EOS(data->start_class);
+                    ANYOF_FLAGS(data->start_class) |= ANYOF_EMPTY_STRING;
                 }
             }
             scan= tail;
@@ -6620,6 +6620,7 @@ reStudy:
 
 	if ((!(r->anchored_substr || r->anchored_utf8) || r->anchored_offset)
 	    && stclass_flag
+            && ! (ANYOF_FLAGS(data.start_class) & ANYOF_EMPTY_STRING)
 	    && ! ssc_is_anything(data.start_class))
 	{
 	    const U32 n = add_data(pRExC_state, STR_WITH_LEN("f"));
@@ -6693,7 +6694,8 @@ reStudy:
 	r->check_substr = r->check_utf8 = r->anchored_substr = r->anchored_utf8
 		= r->float_substr = r->float_utf8 = NULL;
 
-	if (! ssc_is_anything(data.start_class)) {
+            
+	if (! (ANYOF_FLAGS(data.start_class) & ANYOF_EMPTY_STRING) && ! ssc_is_anything(data.start_class)) {
 	    const U32 n = add_data(pRExC_state, STR_WITH_LEN("f"));
 
             ssc_finalize(pRExC_state, data.start_class);
