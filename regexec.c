@@ -2273,7 +2273,7 @@ Perl_regexec_flags(pTHX_ REGEXP * const rx, char *stringarg, char *strend,
             : strbeg; /* pos() not defined; use start of string */
 
         DEBUG_GPOS_r(PerlIO_printf(Perl_debug_log,
-            "GPOS ganch set to strbeg[%"IVdf"]\n", reginfo->ganch - strbeg));
+            "GPOS ganch set to strbeg[%"IVdf"]\n", (IV) (reginfo->ganch - strbeg)));
 
         /* in the presence of \G, we may need to start looking earlier in
          * the string than the suggested start point of stringarg:
@@ -7325,7 +7325,7 @@ S_core_regclass_swash(pTHX_ const regexp *prog, const regnode* node, bool doinit
     if (data && data->count) {
 	const U32 n = ARG(node);
 
-	if (data->what[n] == 's') {
+	if (data->what[n] == 's') { /* XXX assert this */
 	    SV * const rv = MUTABLE_SV(data->data[n]);
 	    AV * const av = MUTABLE_AV(SvRV(rv));
 	    SV **const ary = AvARRAY(av);
@@ -7338,6 +7338,7 @@ S_core_regclass_swash(pTHX_ const regexp *prog, const regnode* node, bool doinit
 	     * that inversion list has any user-defined properties in it. */
 	    if (av_len(av) >= 2) {
 		invlist = ary[2];
+                DEBUG_U({ sv_dump(ary[2]); });
 		if (SvUV(ary[3])) {
                     swash_init_flags |= _CORE_SWASH_INIT_USER_DEFINED_PROPERTY;
                 }

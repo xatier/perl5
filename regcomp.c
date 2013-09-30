@@ -825,8 +825,10 @@ S_ssc_anything(pTHX_ regnode_ssc *ssc)
 STATIC int
 S_ssc_is_anything(pTHX_ const regnode_ssc *ssc)
 {
-    /* Returns TRUE if the SSC 'ssc' can match the empty string or any code
-     * point */
+    /* Returns TRUE if the SSC 'ssc' can match the empty string and any code
+     * point.  Thus, this is used to see if using 'ssc' buys us anything: if
+     * the function returns TRUE, ssc can be anything at all, and so using it
+     * won't restrict anything, so there's no point in using it */
 
     UV start, end;
     bool ret;
@@ -835,7 +837,7 @@ S_ssc_is_anything(pTHX_ const regnode_ssc *ssc)
 
     assert(OP(ssc) == ANYOF_SYNTHETIC);
 
-    if (! ANYOF_FLAGS(ssc) & ANYOF_EMPTY_STRING) {
+    if (! (ANYOF_FLAGS(ssc) & ANYOF_EMPTY_STRING)) {
         return FALSE;
     }
 
@@ -1144,6 +1146,7 @@ S_ssc_and(pTHX_ const RExC_state_t *pRExC_state, regnode_ssc *ssc,
 
             regnode_charclass_posixl temp;
             int add = 1;    /* To calculate the index of the complement */
+            assert(0);
 
             ANYOF_POSIXL_ZERO(&temp);
             for (i = 0; i < ANYOF_MAX; i++) {
@@ -1184,6 +1187,7 @@ S_ssc_and(pTHX_ const RExC_state_t *pRExC_state, regnode_ssc *ssc,
             /* One or the other of P1, P2 is non-empty. */
             ANYOF_POSIXL_AND(and_with, ssc);
             ssc_union(ssc, anded_cp_list, FALSE);
+            assert(0);
         }
         else { /* P1 = P2 = empty */
             ssc_intersection(ssc, anded_cp_list, FALSE);
@@ -4427,7 +4431,7 @@ PerlIO_printf(Perl_debug_log, "LHS=%"UVdf" RHS=%"UVdf"\n",
             case REF:
             case CLUMP:
 		if (flags & SCF_DO_SUBSTR) {
-		    SCAN_COMMIT(pRExC_state,data,minlenp);	/* Cannot expect anything... */
+		    SCAN_COMMIT(pRExC_state,data,minlenp);	/* Cannot expect anything... */ /* But XXX in CLUMP should be at least one more byte; same with EXACTFL above */
 		    data->longest = &(data->longest_float);
 		}
 		is_inf = is_inf_internal = 1;
@@ -6613,8 +6617,7 @@ reStudy:
 
 	if ((!(r->anchored_substr || r->anchored_utf8) || r->anchored_offset)
 	    && stclass_flag
-	    && ! ANYOF_FLAGS(data.start_class) & ANYOF_EMPTY_STRING
-	    && !ssc_is_anything(data.start_class))
+	    && ! ssc_is_anything(data.start_class))
 	{
 	    const U32 n = add_data(pRExC_state, STR_WITH_LEN("f"));
 
@@ -6687,9 +6690,7 @@ reStudy:
 	r->check_substr = r->check_utf8 = r->anchored_substr = r->anchored_utf8
 		= r->float_substr = r->float_utf8 = NULL;
 
-	if (! ANYOF_FLAGS(data.start_class) & ANYOF_EMPTY_STRING
-	    && !ssc_is_anything(data.start_class))
-	{
+	if (! ssc_is_anything(data.start_class)) {
 	    const U32 n = add_data(pRExC_state, STR_WITH_LEN("f"));
 
             ssc_finalize(pRExC_state, data.start_class);
@@ -14070,7 +14071,7 @@ parseit:
                                  * multi-char folds */
                                 break;
                             default:
-                                /* Use deprecated warning to increase the
+                                /* Use default-on warning to increase the
                                  * chances of this being output */
                                 ckWARN2reg_d(RExC_parse, "Perl folding rules are not up-to-date for 0x%"UVXf"; please use the perlbug utility to report;", j);
                                 break;
