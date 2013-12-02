@@ -1384,6 +1384,10 @@ Perl_csighandler(int sig)
 	(*PL_sighandlerp)(sig);
 #endif
     else {
+        /* make sure we deliver signals to the main thread, since we
+         * only set OS signal handlers for the main thread. */
+        dTHXa(PL_curinterp);
+
 	if (!PL_psig_pend) return;
 	/* Set a flag to say this signal is pending, that is awaiting delivery after
 	 * the current Perl opcode completes */
@@ -1393,9 +1397,19 @@ Perl_csighandler(int sig)
 #  define SIG_PENDING_DIE_COUNT 120
 #endif
 	/* Add one to say _a_ signal is pending */
-	if (++PL_sig_pending >= SIG_PENDING_DIE_COUNT)
+	if (++PL_sig_pending >= SIG_PENDING_DIE_COUNT) {
+            /* switch back to the current thread so we don't have two
+             * threads working with the same data structures at the
+             * same time.
+             */
+#ifdef PERL_GET_SIG_CONTEXT
+            dTHXa(PERL_GET_SIG_CONTEXT);
+#else
+            dTHX;
+#endif
 	    Perl_croak(aTHX_ "Maximal count of pending signals (%lu) exceeded",
 		       (unsigned long)SIG_PENDING_DIE_COUNT);
+        }
     }
 }
 
