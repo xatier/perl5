@@ -20,24 +20,17 @@ be applied to their module.
 By default, optional warnings are disabled, so any legacy code that
 doesn't attempt to control the warnings will work unchanged.
 
-All default warnings are enabled in a block by either of these two
-equivalent statements:
+All warnings are enabled in a block by either of these:
 
     use warnings;
     use warnings 'all';
 
-Similarly all default warnings are disabled in a block by either of
-these two equivalent statements:
+Similarly all warnings are disabled in a block by either of these:
 
     no warnings;
     no warnings 'all';
 
-The "default warnings" are almost all of them. Between perl releases
-we may test out new optional warnings in the "new" category. Those
-have to be enabled explicitly. See L</New Warnings> for details.
-
-As an example of enabling and disabling warnings, consider the code
-below:
+For example, consider the code below:
 
     use warnings;
     my @a;
@@ -227,127 +220,126 @@ will be lost.
 =for warnings.pl begin
 
     all -+
-    |    |
-    |    +- closure
-    |    |
-    |    +- deprecated
-    |    |
-    |    +- exiting
-    |    |
-    |    +- experimental --+
-    |    |                 |
-    |    |                 +- experimental::autoderef
-    |    |                 |
-    |    |                 +- experimental::lexical_subs
-    |    |                 |
-    |    |                 +- experimental::lexical_topic
-    |    |                 |
-    |    |                 +- experimental::postderef
-    |    |                 |
-    |    |                 +- experimental::regex_sets
-    |    |                 |
-    |    |                 +- experimental::smartmatch
-    |    |
-    |    +- glob
-    |    |
-    |    +- imprecision
-    |    |
-    |    +- io ------------+
-    |    |                 |
-    |    |                 +- closed
-    |    |                 |
-    |    |                 +- exec
-    |    |                 |
-    |    |                 +- layer
-    |    |                 |
-    |    |                 +- newline
-    |    |                 |
-    |    |                 +- pipe
-    |    |                 |
-    |    |                 +- syscalls
-    |    |                 |
-    |    |                 +- unopened
-    |    |
-    |    +- misc
-    |    |
-    |    +- missing
-    |    |
-    |    +- numeric
-    |    |
-    |    +- once
-    |    |
-    |    +- overflow
-    |    |
-    |    +- pack
-    |    |
-    |    +- portable
-    |    |
-    |    +- recursion
-    |    |
-    |    +- redefine
-    |    |
-    |    +- regexp
-    |    |
-    |    +- severe --------+
-    |    |                 |
-    |    |                 +- debugging
-    |    |                 |
-    |    |                 +- inplace
-    |    |                 |
-    |    |                 +- internal
-    |    |                 |
-    |    |                 +- malloc
-    |    |
-    |    +- signal
-    |    |
-    |    +- substr
-    |    |
-    |    +- syntax --------+
-    |    |                 |
-    |    |                 +- ambiguous
-    |    |                 |
-    |    |                 +- bareword
-    |    |                 |
-    |    |                 +- digit
-    |    |                 |
-    |    |                 +- illegalproto
-    |    |                 |
-    |    |                 +- parenthesis
-    |    |                 |
-    |    |                 +- precedence
-    |    |                 |
-    |    |                 +- printf
-    |    |                 |
-    |    |                 +- prototype
-    |    |                 |
-    |    |                 +- qw
-    |    |                 |
-    |    |                 +- reserved
-    |    |                 |
-    |    |                 +- semicolon
-    |    |
-    |    +- taint
-    |    |
-    |    +- threads
-    |    |
-    |    +- uninitialized
-    |    |
-    |    +- unpack
-    |    |
-    |    +- untie
-    |    |
-    |    +- utf8 ----------+
-    |    |                 |
-    |    |                 +- non_unicode
-    |    |                 |
-    |    |                 +- nonchar
-    |    |                 |
-    |    |                 +- surrogate
-    |    |
-    |    +- void
-    new -+
+         |
+         +- closure
+         |
+         +- deprecated
+         |
+         +- exiting
+         |
+         +- experimental --+
+         |                 |
+         |                 +- experimental::autoderef
+         |                 |
+         |                 +- experimental::lexical_subs
+         |                 |
+         |                 +- experimental::lexical_topic
+         |                 |
+         |                 +- experimental::postderef
+         |                 |
+         |                 +- experimental::regex_sets
+         |                 |
+         |                 +- experimental::smartmatch
+         |
+         +- glob
+         |
+         +- imprecision
+         |
+         +- io ------------+
+         |                 |
+         |                 +- closed
+         |                 |
+         |                 +- exec
+         |                 |
+         |                 +- layer
+         |                 |
+         |                 +- newline
+         |                 |
+         |                 +- pipe
+         |                 |
+         |                 +- syscalls
+         |                 |
+         |                 +- unopened
+         |
+         +- misc
+         |
+         +- missing
+         |
+         +- numeric
+         |
+         +- once
+         |
+         +- overflow
+         |
+         +- pack
+         |
+         +- portable
+         |
+         +- recursion
+         |
+         +- redefine
          |
          +- redundant
+         |
+         +- regexp
+         |
+         +- severe --------+
+         |                 |
+         |                 +- debugging
+         |                 |
+         |                 +- inplace
+         |                 |
+         |                 +- internal
+         |                 |
+         |                 +- malloc
+         |
+         +- signal
+         |
+         +- substr
+         |
+         +- syntax --------+
+         |                 |
+         |                 +- ambiguous
+         |                 |
+         |                 +- bareword
+         |                 |
+         |                 +- digit
+         |                 |
+         |                 +- illegalproto
+         |                 |
+         |                 +- parenthesis
+         |                 |
+         |                 +- precedence
+         |                 |
+         |                 +- printf
+         |                 |
+         |                 +- prototype
+         |                 |
+         |                 +- qw
+         |                 |
+         |                 +- reserved
+         |                 |
+         |                 +- semicolon
+         |
+         +- taint
+         |
+         +- threads
+         |
+         +- uninitialized
+         |
+         +- unpack
+         |
+         +- untie
+         |
+         +- utf8 ----------+
+         |                 |
+         |                 +- non_unicode
+         |                 |
+         |                 +- nonchar
+         |                 |
+         |                 +- surrogate
+         |
+         +- void
 
 =for warnings.pl end
 
@@ -375,21 +367,6 @@ in its own right.
 Note: Before 5.20.0, the "missing" lexical warnings category was
 internally defined to be the same as the "uninitialized" category. It
 is now a top-level category in its own right.
-
-=head2 New Warnings
-
-When new experimental warnings are added to Perl they may be added to
-the "new" category instead of the "all" category, so to really enable
-all warnings you need to do:
-
-    use warnings qw(all new);
-
-This allows for merging patches for new warnings that may have been
-added relatively late in a release cycle without having given CPAN
-authors sufficient time to deal with them.
-
-These "new" warnings are very likely to just be migrated to the "all"
-category on the next major perl release.
 
 =head2 Fatal Warnings
 X<warning, fatal>

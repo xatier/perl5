@@ -1919,7 +1919,7 @@ Perl_ckwarn_d(pTHX_ U32 w)
 static bool
 S_ckwarn_common(pTHX_ U32 w)
 {
-    if (PL_curcop->cop_warnings == pWARN_ALL && w != WARN_REDUNDANT)
+    if (PL_curcop->cop_warnings == pWARN_ALL)
 	return TRUE;
 
     if (PL_curcop->cop_warnings == pWARN_NONE)
