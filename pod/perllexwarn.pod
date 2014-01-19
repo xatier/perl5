@@ -279,6 +279,8 @@ will be lost.
          |
          +- redefine
          |
+         +- redundant
+         |
          +- regexp
          |
          +- severe --------+

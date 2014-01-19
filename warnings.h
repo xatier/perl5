@@ -101,10 +101,11 @@
 #define WARN_EXPERIMENTAL__POSTDEREF 57
 #define WARN_SYSCALLS		 58
 #define WARN_MISSING		 59
+#define WARN_REDUNDANT		 60
 
-#define WARNsize		15
-#define WARN_ALLstring		"\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125"
-#define WARN_NONEstring		"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+#define WARNsize		16
+#define WARN_ALLstring		"\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125"
+#define WARN_NONEstring		"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
 
 #define isLEXWARN_on 	(PL_curcop->cop_warnings != pWARN_STD)
 #define isLEXWARN_off	(PL_curcop->cop_warnings == pWARN_STD)
