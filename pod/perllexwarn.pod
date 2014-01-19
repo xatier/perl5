@@ -263,6 +263,8 @@ will be lost.
          |
          +- misc
          |
+         +- missing
+         |
          +- numeric
          |
          +- once
@@ -359,6 +361,10 @@ L<perldiag>.
 Note: Before Perl 5.8.0, the lexical warnings category "deprecated" was a
 sub-category of the "syntax" category.  It is now a top-level category
 in its own right.
+
+Note: Before 5.20.0, the "missing" lexical warnings category was
+internally defined to be the same as the "uninitialized" category. It
+is now a top-level category in its own right.
 
 =head2 Fatal Warnings
 X<warning, fatal>
