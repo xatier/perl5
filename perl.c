@@ -96,6 +96,7 @@ S_init_tls_and_interp(PerlInterpreter *my_perl)
 	HINTS_REFCNT_INIT;
 	MUTEX_INIT(&PL_dollarzero_mutex);
 	MUTEX_INIT(&PL_my_ctx_mutex);
+        sigemptyset(&PL_signals_set);
 #  endif
     }
 #if defined(USE_ITHREADS)

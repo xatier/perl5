@@ -13318,6 +13318,10 @@ perl_clone_using(PerlInterpreter *proto_perl, UV flags,
     Zero(my_perl, 1, PerlInterpreter);
 #endif	/* DEBUGGING */
 
+#ifdef USE_ITHREADS
+    sigemptyset(&PL_signals_set);
+#endif
+
 #ifdef PERL_IMPLICIT_SYS
     /* host pointers */
     PL_Mem		= ipM;

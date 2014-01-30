@@ -301,6 +301,9 @@ PERLVAR(I, watchok,	char *)
 PERLVAR(I, perldb,	U32)
 
 PERLVAR(I, signals,	U32)	/* Using which pre-5.8 signals */
+#ifdef USE_ITHREADS
+PERLVAR(I, signals_set, sigset_t)   /* which signals have been set in the current thread */
+#endif
 
 PERLVAR(I, reentrant_retint, int)	/* Integer return value from reentrant functions */
 

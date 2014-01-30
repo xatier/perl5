@@ -525,6 +525,12 @@ unless ($define{HAVE_INTERP_INTERN}) {
 			 );
 }
 
+unless ($define{USE_ITHREADS}) {
+    ++$skip{$_} foreach qw(
+		    PL_signals_set
+			 );
+}
+
 if ($define{HAS_SIGNBIT}) {
     ++$skip{Perl_signbit};
 }

@@ -1365,9 +1365,9 @@ Perl_csighandler(int sig)
 #ifdef FAKE_DEFAULT_SIGNAL_HANDLERS
     if (PL_sig_defaulting[sig])
 #ifdef KILL_BY_SIGPRC
-            exit((Perl_sig_to_vmscondition(sig)&STS$M_COND_ID)|STS$K_SEVERE|STS$M_INHIB_MSG);
+        exit((Perl_sig_to_vmscondition(sig)&STS$M_COND_ID)|STS$K_SEVERE|STS$M_INHIB_MSG);
 #else
-            exit(1);
+        exit(1);
 #endif
 #endif
     if (
@@ -1392,7 +1392,18 @@ Perl_csighandler(int sig)
 	if (!PL_psig_pend) return;
 	/* Set a flag to say this signal is pending, that is awaiting delivery after
 	 * the current Perl opcode completes */
-	PL_psig_pend[sig]++;
+#ifdef USE_ITHREADS
+        if (sigismember(&PL_signals_set, sig)) {
+            PL_psig_pend[sig]++;
+        }
+        else {
+            /* no handler specific to thread, deliver to the main thread */
+            dTHXa(PL_curinterp);
+            PL_psig_pend[sig]++;
+        }
+#else
+        PL_psig_pend[sig]++;
+#endif
 
 #ifndef SIG_PENDING_DIE_COUNT
 #  define SIG_PENDING_DIE_COUNT 120
@@ -1598,6 +1609,9 @@ Perl_magic_setsig(pTHX_ SV *sv, MAGIC *mg)
 #else
 		(void)rsignal(i, (Sighandler_t) SIG_IGN);
 #endif
+#ifdef USE_ITHREADS
+                sigdelset(&PL_signals_set, i);
+#endif
 	    }
 	}
 	else if (!sv || memEQs(s, len,"DEFAULT") || !len) {
@@ -1607,6 +1621,9 @@ Perl_magic_setsig(pTHX_ SV *sv, MAGIC *mg)
 		(void)rsignal(i, PL_csighandlerp);
 #else
 		(void)rsignal(i, (Sighandler_t) SIG_DFL);
+#endif
+#ifdef USE_ITHREADS
+                sigdelset(&PL_signals_set, i);
 #endif
 	    }
 	}
@@ -1619,8 +1636,12 @@ Perl_magic_setsig(pTHX_ SV *sv, MAGIC *mg)
 	    if (!strchr(s,':') && !strchr(s,'\''))
 		Perl_sv_insert_flags(aTHX_ sv, 0, 0, STR_WITH_LEN("main::"),
 				     SV_GMAGIC);
-	    if (i)
+	    if (i) {
 		(void)rsignal(i, PL_csighandlerp);
+#ifdef USE_ITHREADS
+                sigaddset(&PL_signals_set, i);
+#endif
+            }
 	    else
 		*svp = SvREFCNT_inc_simple_NN(sv);
 	}
@@ -3134,6 +3155,20 @@ Perl_sighandler(int sig)
 	HV *st;
 	cv = sv_2cv(PL_psig_ptr[sig], &st, &gv, GV_ADD);
     }
+
+#ifdef USE_ITHREADS
+    if (!cv && SvOK(PL_psig_ptr[sig])) {
+        STRLEN siglen;
+        const char *signame = SvPV(PL_psig_ptr[sig], siglen);
+        if (memEQs(signame, siglen, "IGNORE")) {
+            if (aTHX != PL_curinterp) {
+                dTHXa(PL_curinterp);
+                PL_psig_pend[sig]++;
+            }
+            goto cleanup;
+        }
+    }
+#endif
 
     if (!cv || !CvROOT(cv)) {
 	Perl_ck_warner(aTHX_ packWARN(WARN_SIGNAL), "SIG%s handler \"%s\" not defined.\n",

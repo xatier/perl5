@@ -3,6 +3,9 @@
 #include "perl.h"
 #include "XSUB.h"
 #include "fakesdio.h"   /* Causes us to use PerlIO below */
+#ifdef I_PTHREAD
+#include <pthread.h>
+#endif
 
 typedef SV *SVREF;
 typedef PTR_TBL_t *XS__APItest__PtrTable;
@@ -3250,6 +3253,27 @@ CODE:
     exit(0);
 }
 
+#ifdef I_PTHREAD
+
+# used by t/op/magic.t
+
+int
+pthread_kill(UV thread, SV * sig_sv)
+    PREINIT:
+        int sig;
+    CODE:
+	sig = SvIOK(sig_sv) && SvIV(sig_sv) ? SvIV(sig_sv) : whichsig_sv(sig_sv);
+        if (sig >= 0) {
+            RETVAL = pthread_kill((pthread_t)thread, sig);
+        }
+        else {
+            RETVAL = EINVAL;
+        }
+    OUTPUT:
+        RETVAL
+
+#endif /* I_PTHREAD */
+
 #endif /* USE_ITHREDS */
 
 SV*
@@ -4792,3 +4816,4 @@ test_toTITLE_utf8(SV * p)
         RETVAL = av;
     OUTPUT:
         RETVAL
+
