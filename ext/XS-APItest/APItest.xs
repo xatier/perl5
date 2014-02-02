@@ -3,7 +3,9 @@
 #include "perl.h"
 #include "XSUB.h"
 #include "fakesdio.h"   /* Causes us to use PerlIO below */
-#ifdef I_PTHREAD
+
+#if defined(I_PTHREAD) && defined(USE_ITHREADS)
+#define THREAD_SIGNAL_TESTS
 #include <pthread.h>
 #endif
 
@@ -1128,6 +1130,33 @@ my_ck_rv2cv(pTHX_ OP *o)
     }
     return old_ck_rv2cv(aTHX_ o);
 }
+
+#ifdef THREAD_SIGNAL_TESTS
+
+static pthread_t dummy_thread;
+
+static void *
+dummy_thread_routine(void *unused) {
+    sleep(5);
+}
+
+static UV
+create_dummy_thread(void) {
+    if (!pthread_create(&dummy_thread, NULL, dummy_thread_routine, NULL)) {
+        return (PTR2UV(&dummy_thread));
+    }
+    else {
+        return 0;
+    }
+}
+
+static void
+join_dummy_thread(void) {
+    void *tmp;
+    pthread_join(dummy_thread, &tmp);
+}
+
+#endif
 
 #include "const-c.inc"
 
@@ -3253,16 +3282,18 @@ CODE:
     exit(0);
 }
 
-#ifdef I_PTHREAD
+#ifdef THREAD_SIGNAL_TESTS
 
-# used by t/op/magic.t
+# used by t/op/magic_threads.t
 
 int
-pthread_kill(UV thread, SV * sig_sv)
+pthread_kill(SV *thread_sv, SV * sig_sv)
     PREINIT:
         int sig;
+	pthread_t thread;
     CODE:
 	sig = SvIOK(sig_sv) && SvIV(sig_sv) ? SvIV(sig_sv) : whichsig_sv(sig_sv);
+	thread = *INT2PTR(pthread_t*, SvUV(thread_sv));
         if (sig >= 0) {
             RETVAL = pthread_kill((pthread_t)thread, sig);
         }
@@ -3272,9 +3303,15 @@ pthread_kill(UV thread, SV * sig_sv)
     OUTPUT:
         RETVAL
 
-#endif /* I_PTHREAD */
+UV
+create_dummy_thread()
 
-#endif /* USE_ITHREDS */
+void
+join_dummy_thread()
+
+#endif /* THREAD_SIGNAL_TESTS */
+
+#endif /* USE_ITHREADS */
 
 SV*
 take_svref(SVREF sv)

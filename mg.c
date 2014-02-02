@@ -1358,6 +1358,12 @@ Perl_csighandler(int sig)
 #else
     dTHX;
 #endif
+#ifdef USE_ITHREADS
+    if (!my_perl) {
+        my_perl = PL_curinterp;
+	PERL_SET_THX(my_perl);
+    }
+#endif
 #ifdef FAKE_PERSISTENT_SIGNAL_HANDLERS
     (void) rsignal(sig, PL_csighandlerp);
     if (PL_sig_ignoring[sig]) return;
@@ -1389,19 +1395,26 @@ Perl_csighandler(int sig)
 	(*PL_sighandlerp)(sig);
 #endif
     else {
+PerlIO_printf(PerlIO_stderr(), "in sig handler %d\n", __LINE__);
 	if (!PL_psig_pend) return;
 	/* Set a flag to say this signal is pending, that is awaiting delivery after
 	 * the current Perl opcode completes */
 #ifdef USE_ITHREADS
+PerlIO_printf(PerlIO_stderr(), "thread %p\n", &PL_signals_set);
         if (sigismember(&PL_signals_set, sig)) {
+PerlIO_printf(PerlIO_stderr(), "in sig handler %d\n", __LINE__);
             PL_psig_pend[sig]++;
+            ++PL_sig_pending;
         }
         else {
             /* no handler specific to thread, deliver to the main thread */
             dTHXa(PL_curinterp);
             PL_psig_pend[sig]++;
+            ++PL_sig_pending;
+PerlIO_printf(PerlIO_stderr(), "in sig handler %d\n", __LINE__);
         }
 #else
+        ++PL_sig_pending;
         PL_psig_pend[sig]++;
 #endif
 
@@ -1409,7 +1422,7 @@ Perl_csighandler(int sig)
 #  define SIG_PENDING_DIE_COUNT 120
 #endif
 	/* Add one to say _a_ signal is pending */
-	if (++PL_sig_pending >= SIG_PENDING_DIE_COUNT)
+	if (PL_sig_pending >= SIG_PENDING_DIE_COUNT)
 	    Perl_croak(aTHX_ "Maximal count of pending signals (%lu) exceeded",
 		       (unsigned long)SIG_PENDING_DIE_COUNT);
     }
@@ -1592,6 +1605,10 @@ Perl_magic_setsig(pTHX_ SV *sv, MAGIC *mg)
     if (sv && (isGV_with_GP(sv) || SvROK(sv))) {
 	if (i) {
 	    (void)rsignal(i, PL_csighandlerp);
+#ifdef USE_ITHREADS
+PerlIO_printf(PerlIO_stderr(), "marking signal %d as set in %p\n", i, &PL_signals_set);
+            sigaddset(&PL_signals_set, i);
+#endif
 	}
 	else
 	    *svp = SvREFCNT_inc_simple_NN(sv);
@@ -1639,6 +1656,7 @@ Perl_magic_setsig(pTHX_ SV *sv, MAGIC *mg)
 	    if (i) {
 		(void)rsignal(i, PL_csighandlerp);
 #ifdef USE_ITHREADS
+PerlIO_printf(PerlIO_stderr(), "marking signal %d as set in %p\n", i, &PL_signals_set);
                 sigaddset(&PL_signals_set, i);
 #endif
             }
