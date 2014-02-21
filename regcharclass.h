@@ -595,7 +595,9 @@
 	( ( 0xA0 == NATIVE_TO_LATIN1(((U8*)s)[2]) ) ? 3 : 0 )               \
     : ( ( 0xBF == NATIVE_TO_LATIN1(((U8*)s)[1]) ) && ( 0xB0 <= NATIVE_TO_LATIN1(((U8*)s)[2]) && NATIVE_TO_LATIN1(((U8*)s)[2]) <= 0xB8 ) ) ? 3 : 0 )\
 : ( 0xF0 == NATIVE_TO_LATIN1(((U8*)s)[0]) ) ?                               \
-    ( ( ( ( 0x9D == NATIVE_TO_LATIN1(((U8*)s)[1]) ) && ( 0x85 == NATIVE_TO_LATIN1(((U8*)s)[2]) ) ) && ( 0xB3 <= NATIVE_TO_LATIN1(((U8*)s)[3]) && NATIVE_TO_LATIN1(((U8*)s)[3]) <= 0xBA ) ) ? 4 : 0 )\
+    ( ( 0x9B == NATIVE_TO_LATIN1(((U8*)s)[1]) ) ?                           \
+	( ( ( 0xB2 == NATIVE_TO_LATIN1(((U8*)s)[2]) ) && ( ( NATIVE_TO_LATIN1(((U8*)s)[3]) & 0xFC ) == 0xA0 ) ) ? 4 : 0 )\
+    : ( ( ( 0x9D == NATIVE_TO_LATIN1(((U8*)s)[1]) ) && ( 0x85 == NATIVE_TO_LATIN1(((U8*)s)[2]) ) ) && ( 0xB3 <= NATIVE_TO_LATIN1(((U8*)s)[3]) && NATIVE_TO_LATIN1(((U8*)s)[3]) <= 0xBA ) ) ? 4 : 0 )\
 : ( ( 0xF3 == NATIVE_TO_LATIN1(((U8*)s)[0]) ) && ( 0xA0 == NATIVE_TO_LATIN1(((U8*)s)[1]) ) ) ? 4 : 0 )
 
 /*
