@@ -1022,12 +1022,9 @@ sed <<!GROK!THIS! >$CONFIG_H -e 's!^#undef\(.*/\)\*!/\*#define\1 \*!' -e 's!^#un
 #      endif
 #    endif
 #  endif
-#  if !defined(BYTEORDER) && (defined(NeXT) || defined(__NeXT__))
-#    define BYTEORDER 0x4321
-#  endif
 #else
 #define BYTEORDER 0x$byteorder	/* large digits for MSB */
-#endif /* NeXT */
+#endif
 
 /* CHARBITS:
  *	This symbol contains the size of a char, so that the C preprocessor

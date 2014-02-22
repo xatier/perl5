@@ -201,20 +201,12 @@ sub _unix_os2_ext {
 
             # Do not add it into the list if it is already linked in
             # with the main perl executable.
-            # We have to special-case the NeXT, because math and ndbm
-            # are both in libsys_s
-            unless (
-                $in_perl
-                || ( $Config{'osname'} eq 'next'
-                    && ( $thislib eq 'm' || $thislib eq 'ndbm' ) )
-              )
-            {
+            unless ( $in_perl ) {
                 push( @extralibs, "-l$thislib" );
             }
 
             # We might be able to load this archive file dynamically
-            if (   ( $Config{'dlsrc'} =~ /dl_next/ && $Config{'osvers'} lt '4_0' )
-                || ( $Config{'dlsrc'} =~ /dl_dld/ ) )
+            if ( $Config{'dlsrc'} =~ /dl_dld/ )
             {
 
                 # We push -l$thislib instead of $fullname because

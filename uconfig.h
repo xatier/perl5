@@ -987,12 +987,9 @@
 #      endif
 #    endif
 #  endif
-#  if !defined(BYTEORDER) && (defined(NeXT) || defined(__NeXT__))
-#    define BYTEORDER 0x4321
-#  endif
 #else
 #define BYTEORDER 0x1234	/* large digits for MSB */
-#endif /* NeXT */
+#endif
 
 /* CHARBITS:
  *	This symbol contains the size of a char, so that the C preprocessor
@@ -4718,6 +4715,6 @@
 #endif
 
 /* Generated from:
- * cdad09dc550db3784fa27db0f3cc6e1c1644e496c430e464d143bc725c327a53 config_h.SH
+ * 9db20e49c5758d03fe2d7dde405df9f7cc3a22a9375a64b3c7af181a1bc1d80d config_h.SH
  * ac5e1b20c67628ee909f09737452ab1878a99053c728e3e7746c23c7b8a0d037 uconfig.sh
  * ex: set ro: */
