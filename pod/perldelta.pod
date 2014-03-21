@@ -242,6 +242,13 @@ alternative fix is planned for Perl 5.22
 
 =item *
 
+A mismatch between the documentation and the code in utf8::downgrade()
+was fixed in favour of the documentation. The optional second argument
+is now correctly treated as a perl boolean (true/false semantics) and
+not as an integer.
+
+=item *
+
 A regression was introduced in Perl 5.19.10 that under some circumstances
 caused C<//m> matches to falsely fail.  Now fixed.
 [L<perl #121484|https://rt.perl.org/Public/Bug/Display.html?id=121484>]
