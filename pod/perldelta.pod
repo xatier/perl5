@@ -82,7 +82,21 @@ The list of Perl versions covered has been updated.
 
 L<PerlIO> has been upgraded from version 1.08 to 1.09.
 
+=item *
+
 The warning about the use of the C<:utf8> layer has been made more prominent.
+
+=item *
+
+L<Hash::Util> has been upgraded from version 0.16 to 0.17.
+
+Minor bug fixes and documentation fixes to Hash::Util::hash_stats()
+
+=back
+
+=head2 Removed Modules and Pragmata
+
+=over 4
 
 =item *
 
