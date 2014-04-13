@@ -523,12 +523,10 @@ See also bucket_stats() and bucket_array().
 
 Returns a list of statistics about a hash.
 
-    my ($keys, buckets, $used, $utilization_ratio, $collision_pct,
-        $mean, $stddev, @length_counts) = bucket_info($hashref);
-
+    my ($keys, $buckets, $used, $quality, $utilization_ratio, $collision_pct,
+        $mean, $stddev, @length_counts) = bucket_stats($hashref);
 
 Fields are as follows:
-
 
     0: Number of keys in the hash
     1: Number of buckets in the hash
