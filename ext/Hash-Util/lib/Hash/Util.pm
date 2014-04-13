@@ -29,12 +29,12 @@ our @EXPORT_OK  = qw(
                      hidden_ref_keys legal_ref_keys
 
                      hash_seed hash_value hv_store
-                     bucket_stats bucket_info bucket_array
+                     bucket_stats bucket_stats_formatted bucket_info bucket_array
                      lock_hash_recurse unlock_hash_recurse
 
                      hash_traversal_mask
                     );
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 require XSLoader;
 XSLoader::load();
 
@@ -595,6 +595,110 @@ sub bucket_stats {
         $stddev= sqrt($sum/$used);
     }
     return $keys, $buckets, $used, $keys ? ($score, $used/$buckets, ($keys-$used)/$keys, $mean, $stddev, @length_counts) : ();
+}
+
+=item B<bucket_stats_formatted>
+
+  print bucket_stats_formatted($hashref);
+
+Return a formatted report of the information returned by bucket_stats().
+An example report looks like this:
+
+    Keys: 50 Buckets: 33/64 Quality-Score: 1.01 (Good)
+    Utilized Buckets: 51.56% Optimal: 78.12% Keys In Collision: 34.00%
+    Chain Length - mean: 1.52 stddev: 0.66
+    Buckets 64          [0000000000000000000000000000000111111111111111111122222222222333]
+    Len   0 Pct:  48.44 [###############################]
+    Len   1 Pct:  29.69 [###################]
+    Len   2 Pct:  17.19 [###########]
+    Len   3 Pct:   4.69 [###]
+    Keys    50          [11111111111111111111111111111111122222222222222333]
+    Pos   1 Pct:  66.00 [#################################]
+    Pos   2 Pct:  28.00 [##############]
+    Pos   3 Pct:   6.00 [###]
+
+The first set of stats gives some summary statistical information,
+including the quality score translated into "Good", "Poor" and "Bad",
+(score<=1.05, score<=1.2, score>1.2). See the documentation in
+bucket_stats() for more details.
+
+The two sets of barcharts give stats and a visual indication of performance
+of the hash.
+
+The first gives data on bucket chain lengths and provides insight on how
+much work a fetch *miss* will take. In this case we have to inspect every item
+in a bucket before we can be sure the item is not in the list. The performance
+for an insert is equivalent to this case, as is a delete where the item
+is not in the hash.
+
+The second gives data on how many keys are at each depth in the chain, and
+gives an idea of how much work a fetch *hit* will take. The performance for
+an update or delete of an item in the hash is equivalent to this case.
+
+Note that these statistics are summary only. Actual performance will depend
+on real hit/miss ratios accessing the hash. If you are concerned by hit ratios
+you are recommended to "oversize" your hash by using something like:
+
+   keys(%hash)= keys(%hash) << $k;
+
+With $k chosen carefully, and likely to be a small number like 1 or 2. In
+theory the larger the bucket array the less chance of collision.
+
+=cut
+
+
+sub _bucket_stats_formatted_bars {
+    my ($total, $ary, $start_idx, $title, $row_title)= @_;
+
+    my $return = "";
+    my $max_width= $total > 64 ? 64 : $total;
+    my $bar_width= $max_width / $total;
+
+    my $str= "";
+    if ( @$ary < 10) {
+        for my $idx ($start_idx .. $#$ary) {
+            $str .= $idx x sprintf("%.0f", ($ary->[$idx] * $bar_width));
+        }
+    } else {
+        $str= "-" x $max_width;
+    }
+    $return .= sprintf "%-7s         %6d [%s]\n",$title, $total, $str;
+
+    foreach my $idx ($start_idx .. $#$ary) {
+        $return .= sprintf "%-.3s %3d %6.2f%% %6d [%s]\n",
+            $row_title,
+            $idx,
+            $ary->[$idx] / $total * 100,
+            $ary->[$idx],
+            "#" x sprintf("%.0f", ($ary->[$idx] * $bar_width)),
+        ;
+    }
+    return $return;
+}
+
+sub bucket_stats_formatted {
+    my ($hashref)= @_;
+    my ($keys, $buckets, $used, $score, $utilization_ratio, $collision_pct,
+        $mean, $stddev, @length_counts) = bucket_stats($hashref);
+
+    my $return= sprintf   "Keys: %d Buckets: %d/%d Quality-Score: %.2f (%s)\n"
+                        . "Utilized Buckets: %.2f%% Optimal: %.2f%% Keys In Collision: %.2f%%\n"
+                        . "Chain Length - mean: %.2f stddev: %.2f\n",
+                $keys, $used, $buckets, $score, $score <= 1.05 ? "Good" : $score < 1.2 ? "Poor" : "Bad",
+                $utilization_ratio * 100,
+                $keys/$buckets * 100,
+                $collision_pct * 100,
+                $mean, $stddev;
+
+    my @key_depth;
+    $key_depth[$_]= $length_counts[$_] + ( $key_depth[$_+1] || 0 )
+        for reverse 1 .. $#length_counts;
+
+    if ($keys) {
+        $return .= _bucket_stats_formatted_bars($buckets, \@length_counts, 0, "Buckets", "Len");
+        $return .= _bucket_stats_formatted_bars($keys, \@key_depth, 1, "Keys", "Pos");
+    }
+    return $return
 }
 
 =item B<hv_store>
