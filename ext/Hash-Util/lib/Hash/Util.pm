@@ -534,8 +534,8 @@ Fields are as follows:
     3: Hash Quality Score
     4: Percent of buckets used
     5: Percent of keys which are in collision
-    6: Average bucket length
-    7: Standard Deviation of bucket lengths.
+    6: Mean bucket length of occupied buckets
+    7: Standard Deviation of bucket lengths of occupied buckets
     rest : list of counts, Kth element is the number of buckets
            with K keys in it.
 
@@ -579,18 +579,21 @@ sub bucket_stats {
     my ($keys, $buckets, $used, @length_counts) = bucket_info($hash);
     my $sum;
     my $score;
-    for (0 .. $#length_counts) {
+    for (1 .. $#length_counts) {
         $sum += ($length_counts[$_] * $_);
         $score += $length_counts[$_] * ( $_ * ($_ + 1 ) / 2 );
     }
     $score = $score /
              (( $keys / (2 * $buckets )) * ( $keys + ( 2 * $buckets ) - 1 ))
                  if $keys;
-    my $mean= $sum/$buckets;
-    $sum= 0;
-    $sum += ($length_counts[$_] * (($_-$mean)**2)) for 0 .. $#length_counts;
+    my ($mean, $stddev)= (0, 0);
+    if ($used) {
+        $mean= $sum / $used;
+        $sum= 0;
+        $sum += ($length_counts[$_] * (($_-$mean)**2)) for 1 .. $#length_counts;
 
-    my $stddev= sqrt($sum/$buckets);
+        $stddev= sqrt($sum/$used);
+    }
     return $keys, $buckets, $used, $keys ? ($score, $used/$buckets, ($keys-$used)/$keys, $mean, $stddev, @length_counts) : ();
 }
 
