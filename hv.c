@@ -1163,6 +1163,12 @@ S_hv_delete_common(pTHX_ HV *hv, SV *keysv, const char *key, STRLEN klen,
 }
 
 
+#if 1
+#define HvFIRSTRAND(hv) ((U32)PL_hash_rand_bits)
+#else
+#define HvFIRSTRAND(hv) (ptr_hash((void *)(hv+HvKEYS(hv))))
+#endif
+
 STATIC void
 S_hsplit(pTHX_ HV *hv, STRLEN const oldsize, STRLEN newsize)
 {
@@ -1227,7 +1233,7 @@ S_hsplit(pTHX_ HV *hv, STRLEN const oldsize, STRLEN newsize)
              * since we have to do the realloc anyway. */
             /* first we set the iterator's xhv_rand so it can be copied into lastrand below */
 #ifdef PERL_HASH_RANDOMIZE_KEYS
-            dest->xhv_rand = (U32)PL_hash_rand_bits;
+            dest->xhv_rand = HvFIRSTRAND(hv);
 #endif
             /* this is the "non realloc" part of the hv_auxinit() */
             (void)hv_auxinit_internal(dest);
@@ -2007,7 +2013,7 @@ S_hv_auxinit(pTHX_ HV *hv) {
                 PL_hash_rand_bits += ptr_hash((PTRV)array);
             PL_hash_rand_bits = ROTL_UV(PL_hash_rand_bits,1);
         }
-        iter->xhv_rand = (U32)PL_hash_rand_bits;
+        iter->xhv_rand = HvFIRSTRAND(hv);
 #endif
     } else {
         iter = HvAUX(hv);
