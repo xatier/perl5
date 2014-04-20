@@ -11,21 +11,29 @@
 
 #ifndef PERL_SEEN_HV_FUNC_H /* compile once */
 #define PERL_SEEN_HV_FUNC_H
+#include "hv_lookup3.h"
 
 #if !( 0 \
-        || defined(PERL_HASH_FUNC_SIPHASH) \
+        || defined(PERL_HASH_FUNC_SIPHASH_2_4) \
+        || defined(PERL_HASH_FUNC_SIPHASH_1_2) \
         || defined(PERL_HASH_FUNC_SDBM) \
         || defined(PERL_HASH_FUNC_DJB2) \
+        || defined(PERL_HASH_FUNC_LOOKUP3) \
         || defined(PERL_HASH_FUNC_SUPERFAST) \
         || defined(PERL_HASH_FUNC_MURMUR3) \
         || defined(PERL_HASH_FUNC_ONE_AT_A_TIME) \
         || defined(PERL_HASH_FUNC_ONE_AT_A_TIME_HARD) \
         || defined(PERL_HASH_FUNC_ONE_AT_A_TIME_OLD) \
+        || defined(PERL_HASH_FUNC_WRAPPED) \
     )
-#define PERL_HASH_FUNC_ONE_AT_A_TIME_HARD
+#define PERL_HASH_FUNC_WRAPPED
 #endif
 
-#if defined(PERL_HASH_FUNC_SIPHASH)
+#if defined(PERL_HASH_FUNC_SIPHASH_1_2)
+#   define PERL_HASH_FUNC "SIPHASH_1_2"
+#   define PERL_HASH_SEED_BYTES 16
+#   define PERL_HASH(hash,str,len) (hash)= S_perl_hash_siphash_1_2(PERL_HASH_SEED,(U8*)(str),(len))
+#elif defined(PERL_HASH_FUNC_SIPHASH_2_4)
 #   define PERL_HASH_FUNC "SIPHASH_2_4"
 #   define PERL_HASH_SEED_BYTES 16
 #   define PERL_HASH(hash,str,len) (hash)= S_perl_hash_siphash_2_4(PERL_HASH_SEED,(U8*)(str),(len))
@@ -57,6 +65,14 @@
 #   define PERL_HASH_FUNC "ONE_AT_A_TIME_OLD"
 #   define PERL_HASH_SEED_BYTES 4
 #   define PERL_HASH(hash,str,len) (hash)= S_perl_hash_old_one_at_a_time(PERL_HASH_SEED,(U8*)(str),(len))
+#elif defined(PERL_HASH_FUNC_LOOKUP3)
+#   define PERL_HASH_FUNC "LOOKUP3"
+#   define PERL_HASH_SEED_BYTES 4
+#   define PERL_HASH(hash,str,len) (hash)= S_perl_hash_lookup3_hashlittle(PERL_HASH_SEED, (U8*)(str),(len))
+#elif defined(PERL_HASH_FUNC_WRAPPED)
+#   define PERL_HASH_FUNC "WRAPPED"
+#   define PERL_HASH_SEED_BYTES 12
+#   define PERL_HASH(hash,str,len) (hash)= S_perl_hash_wrapped(PERL_HASH_SEED,(U8*)(str),(len))
 #endif
 
 #ifndef PERL_HASH
@@ -239,6 +255,58 @@ S_perl_hash_siphash_2_4(const unsigned char * const seed, const unsigned char *i
   v2 ^= 0xff;
   SIPROUND;
   SIPROUND;
+  SIPROUND;
+  SIPROUND;
+  b = v0 ^ v1 ^ v2  ^ v3;
+  return (U32)(b & U32_MAX);
+}
+
+PERL_STATIC_INLINE U32
+S_perl_hash_siphash_1_2(const unsigned char * const seed, const unsigned char *in, const STRLEN inlen) {
+  /* "somepseudorandomlygeneratedbytes" */
+  U64TYPE v0 = 0x736f6d6570736575ULL;
+  U64TYPE v1 = 0x646f72616e646f6dULL;
+  U64TYPE v2 = 0x6c7967656e657261ULL;
+  U64TYPE v3 = 0x7465646279746573ULL;
+
+  U64TYPE b;
+  U64TYPE k0 = ((U64TYPE*)seed)[0];
+  U64TYPE k1 = ((U64TYPE*)seed)[1];
+  U64TYPE m;
+  const int left = inlen & 7;
+  const U8 *end = in + inlen - left;
+
+  b = ( ( U64TYPE )(inlen) ) << 56;
+  v3 ^= k1;
+  v2 ^= k0;
+  v1 ^= k1;
+  v0 ^= k0;
+
+  for ( ; in != end; in += 8 )
+  {
+    m = U8TO64_LE( in );
+    v3 ^= m;
+    SIPROUND;
+    v0 ^= m;
+  }
+
+  switch( left )
+  {
+  case 7: b |= ( ( U64TYPE )in[ 6] )  << 48;
+  case 6: b |= ( ( U64TYPE )in[ 5] )  << 40;
+  case 5: b |= ( ( U64TYPE )in[ 4] )  << 32;
+  case 4: b |= ( ( U64TYPE )in[ 3] )  << 24;
+  case 3: b |= ( ( U64TYPE )in[ 2] )  << 16;
+  case 2: b |= ( ( U64TYPE )in[ 1] )  <<  8;
+  case 1: b |= ( ( U64TYPE )in[ 0] ); break;
+  case 0: break;
+  }
+
+  v3 ^= b;
+  SIPROUND;
+  v0 ^= b;
+
+  v2 ^= 0xff;
   SIPROUND;
   SIPROUND;
   b = v0 ^ v1 ^ v2  ^ v3;
@@ -536,6 +604,20 @@ S_perl_hash_one_at_a_time_hard(const unsigned char * const seed, const unsigned 
     hash += (hash << 3);
     hash ^= (hash >> 11);
     return (hash + (hash << 15));
+}
+
+PERL_STATIC_INLINE U32
+S_perl_hash_wrapped(const unsigned char * const seed, const unsigned char *str, const STRLEN len) {
+    if (len > 1) {
+        return S_perl_hash_lookup3_hashlittle(seed + 8, str, len);
+    }
+    else
+    if (len == 1) {
+        return *((U32*)seed) ^ *str;
+    }
+    else {
+        return *((U32*)(seed + 4));
+    }
 }
 
 PERL_STATIC_INLINE U32
