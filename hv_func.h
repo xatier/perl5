@@ -646,7 +646,7 @@ S_perl_hash_old_one_at_a_time(const unsigned char * const seed, const unsigned c
 }
 
 #ifdef BUILD_PERL_HASH_FUNC_AESHASH
-/* requires -Accflags="-msse2 -maes" in ./Configure */
+/* requires -Accflags="-msse2 -maes -mssse3" in ./Configure */
 #include <wmmintrin.h>
 #include <pmmintrin.h>
 #include <tmmintrin.h>
