@@ -1815,6 +1815,11 @@ S_gv_magicalize(pTHX_ GV *gv, HV *stash, const char *name, STRLEN len,
                 }
 		break;
 	    case '\024':	/* ${^TAINT} */
+/*
+XXX ^G global phase U+0007: \x07	\x07	\x2F	ALERT
+XXX taint, basetime ^T U+0014: \x14	\x14	\x3C	DEVICE CONTROL FOUR
+XXX ^W U+0017: \x17	\x17	\x26	END OF TRANSMISSION BLOCK
+*/
 		if (strEQ(name2, "AINT"))
 		    goto ro_magicalize;
 		break;

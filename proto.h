@@ -7699,11 +7699,12 @@ STATIC UV	S_check_locale_boundary_crossing(pTHX_ const U8* const p, const UV res
 #define PERL_ARGS_ASSERT_CHECK_LOCALE_BOUNDARY_CROSSING	\
 	assert(p); assert(ustrp); assert(lenp)
 
-PERL_STATIC_INLINE STRLEN	S_is_utf8_char_slow(const U8 *s, const STRLEN len)
+PERL_STATIC_INLINE STRLEN	S_is_utf8_char_slow(const U8 *s, const U8 *e)
 			__attribute__warn_unused_result__
-			__attribute__nonnull__(1);
+			__attribute__nonnull__(1)
+			__attribute__nonnull__(2);
 #define PERL_ARGS_ASSERT_IS_UTF8_CHAR_SLOW	\
-	assert(s)
+	assert(s); assert(e)
 
 PERL_STATIC_INLINE bool	S_is_utf8_common(pTHX_ const U8 *const p, SV **swash, const char * const swashname, SV* const invlist)
 			__attribute__warn_unused_result__

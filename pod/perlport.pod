@@ -1237,6 +1237,7 @@ VOS Open-Source Software on the web at L<http://ftp.stratus.com/pub/vos/vos.html
 =head2 EBCDIC Platforms
 
 Recent versions of Perl have been ported to platforms such as OS/400 on
+XXX
 AS/400 minicomputers as well as OS/390, VM/ESA, and BS2000 for S/390
 Mainframes.  Such computers use EBCDIC character sets internally (usually
 Character Code Set ID 0037 for OS/400 and either 1047 or POSIX-BC for S/390

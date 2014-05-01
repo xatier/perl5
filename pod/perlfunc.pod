@@ -4469,6 +4469,7 @@ of values, as follows:
     P  A pointer to a structure (fixed-length string).
 
     u  A uuencoded string.
+    XXX This needs attention
     U  A Unicode character number.  Encodes to a character in char-
        acter mode and UTF-8 (or UTF-EBCDIC in EBCDIC platforms) in
        byte mode.

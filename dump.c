@@ -2794,8 +2794,9 @@ Perl_sv_catxmlpvn(pTHX_ SV *dsv, const char *pv, STRLEN len, int utf8)
 		break;
 	    }
 	    if ((c >= 0xD800 && c <= 0xDB7F) ||
+                    /* what about DB80-dBFF */
 		(c >= 0xDC00 && c <= 0xDFFF) ||
-		(c >= 0xFFF0 && c <= 0xFFFF) ||
+		/* why ? */ (c >= 0xFFF0 && c <= 0xFFFF) ||
 		 c > 0x10ffff)
 		Perl_sv_catpvf(aTHX_ dsv, "STUPIDXML(#x%X)", c);
 	    else

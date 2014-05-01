@@ -2118,7 +2118,7 @@ S_make_trie(pTHX_ RExC_state_t *pRExC_state, regnode *startbranch,
                 }
             }
             else {
-                maxbytes += (UNI_IS_INVARIANT(*uc))
+                maxbytes += (UVCHR_IS_INVARIANT(*uc))
                              ? 1
                              : 2;
                 if (! folder) {
@@ -10936,7 +10936,7 @@ S_alloc_maybe_populate_EXACT(pTHX_ RExC_state_t *pRExC_state,
 
     if (! len_passed_in) {
         if (UTF) {
-            if (UNI_IS_INVARIANT(code_point)) {
+            if (UVCHR_IS_INVARIANT(code_point)) {
                 if (LOC || ! FOLD) {    /* /l defers folding until runtime */
                     *character = (U8) code_point;
                 }

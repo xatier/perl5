@@ -15,6 +15,8 @@ $|=1 if DEBUG;
 sub ASCII_PLATFORM { (ord('A') == 65) }
 
 require 'regen/regen_lib.pl';
+require 'regen/charset_translations.pl';
+require "regen/regcharclass_multi_char_folds.pl";
 
 =head1 NAME
 
@@ -161,16 +163,23 @@ License or the Artistic License, as specified in the README file.
 #
 
 sub __uni_latin1 {
+    my $charset= shift;
     my $str= shift;
     my $max= 0;
     my @cp;
     my @cp_high;
     my $only_has_invariants = 1;
+    my @a2n = get_a2n($charset);
     for my $ch ( split //, $str ) {
         my $cp= ord $ch;
-        push @cp, $cp;
-        push @cp_high, $cp if $cp > 255;
         $max= $cp if $max < $cp;
+        if ($cp > 255) {
+            push @cp, $cp;
+            push @cp_high, $cp;
+        }
+        else {
+            push @cp, $a2n[$cp];
+        }
         if (! ASCII_PLATFORM && $only_has_invariants) {
             if ($cp > 255) {
                 $only_has_invariants = 0;
@@ -184,15 +193,17 @@ sub __uni_latin1 {
         }
     }
     my ( $n, $l, $u );
-    $only_has_invariants = $max < 128 if ASCII_PLATFORM;
+    $only_has_invariants = ($charset =~ /ascii/i) ? $max < 128 : $max < 160; #if ASCII_PLATFORM;
     if ($only_has_invariants) {
         $n= [@cp];
     } else {
         $l= [@cp] if $max && $max < 256;
 
-        $u= $str;
-        utf8::upgrade($u);
-        $u= [ unpack "U0C*", $u ] if defined $u;
+        my @u;
+        for my $ch ( split //, $str ) {
+            push @u, map { ord } split //, cp_2_utfbytes(ord $ch, $charset);
+        }
+        $u = \@u;
     }
     return ( \@cp, \@cp_high, $n, $l, $u );
 }
@@ -381,8 +392,8 @@ sub new {
                 }
             }
             next;
-        } elsif ($str =~ / ^ do \s+ ( .* ) /x) {
-            die "do '$1' failed: $!$@" if ! do $1 or $@;
+        } elsif ($str =~ / ^ require \s+ ( .* ) /x) {
+            die "do '$1' failed: $!$@" if ! require $1 or $@;
             next;
         } elsif ($str =~ / ^ & \s* ( .* ) /x) { # user-furnished sub() call
             my @results = eval "$1";
@@ -392,7 +403,7 @@ sub new {
         } else {
             die "Unparsable line: $txt\n";
         }
-        my ( $cp, $cp_high, $low, $latin1, $utf8 )= __uni_latin1( $str );
+        my ( $cp, $cp_high, $low, $latin1, $utf8 )= __uni_latin1( $opt{charset}, $str );
         my $UTF8= $low   || $utf8;
         my $LATIN1= $low || $latin1;
         my $high = (scalar grep { $_ < 256 } @$cp) ? 0 : $utf8;
@@ -516,11 +527,11 @@ sub _optree {
     my $test;
     if ($test_type =~ /^cp/) {
         $test = "cp";
-        $test = "NATIVE_TO_UNI($test)" if ASCII_PLATFORM;
+        #$test = "NATIVE_TO_UNI($test)" if ASCII_PLATFORM;
     }
     else {
         $test = "((U8*)s)[$depth]";
-        $test = "NATIVE_TO_LATIN1($test)" if ASCII_PLATFORM;
+        #$test = "NATIVE_TO_LATIN1($test)" if ASCII_PLATFORM;
     }
 
     # first we loop over the possible keys/conditions and find out what they
@@ -1359,19 +1370,21 @@ WARNING: These macros are for internal Perl core use only, and may be
 changed or removed without notice.
 EOF
     );
-    print $out_fh "\n#ifndef H_REGCHARCLASS   /* Guard against nested #includes */\n#define H_REGCHARCLASS 1\n\n";
+    print $out_fh "\n#ifndef H_REGCHARCLASS   /* Guard against nested #includes */\n#define H_REGCHARCLASS 1\n";
 
     my ( $op, $title, @txt, @types, %mods );
-    my $doit= sub {
+    my $doit= sub ($) {
         return unless $op;
 
+        my $charset = shift;
+
         # Skip if to compile on a different platform.
-        return if delete $mods{only_ascii_platform} && ! ASCII_PLATFORM;
-        return if delete $mods{only_ebcdic_platform} && ord 'A' != 193;
+        return if delete $mods{only_ascii_platform} && $charset !~ /ascii/i;
+        return if delete $mods{only_ebcdic_platform} && $charset !~ /ebcdic/i;
 
         print $out_fh "/*\n\t$op: $title\n\n";
         print $out_fh join "\n", ( map { "\t$_" } @txt ), "*/", "";
-        my $obj= __PACKAGE__->new( op => $op, title => $title, txt => \@txt );
+        my $obj= __PACKAGE__->new( op => $op, title => $title, txt => \@txt, charset => $charset);
 
         #die Dumper(\@types,\%mods);
 
@@ -1408,12 +1421,25 @@ EOF
         }
     };
 
-    while ( <DATA> ) {
+    my @data = <DATA>;
+    foreach my $charset (get_supported_code_pages()) {
+        my $first_time = 1;
+        undef $op;
+        undef $title;
+        undef @txt;
+        undef @types;
+        undef %mods;
+        print $out_fh "\n", get_conditional_compile_line_start($charset);
+        #XXX indent
+        my @data_copy = @data;
+    for (@data_copy) {
+        #print STDERR __LINE__, ": ", $_;
         s/^ \s* (?: \# .* ) ? $ //x;    # squeeze out comment and blanks
         next unless /\S/;
         chomp;
         if ( /^[A-Z]/ ) {
-            $doit->();  # This starts a new definition; do the previous one
+            $doit->($charset) unless $first_time;  # This starts a new definition; do the previous one
+            $first_time = 0;
             ( $op, $title )= split /\s*:\s*/, $_, 2;
             @txt= ();
         } elsif ( s/^=>// ) {
@@ -1425,7 +1451,9 @@ EOF
             push @txt, "$_";
         }
     }
-    $doit->();
+    $doit->($charset);
+        print $out_fh get_conditional_compile_line_end();
+    }
 
     print $out_fh "\n#endif /* H_REGCHARCLASS */\n";
 
@@ -1457,7 +1485,7 @@ EOF
 #       optional space)
 #   3)  a single Unicode property specified in the standard Perl form
 #       "\p{...}"
-#   4)  a line like 'do path'.  This will do a 'do' on the file given by
+#   XXX 4)  a line like 'do path'.  This will do a 'do' on the file given by
 #       'path'.  It is assumed that this does nothing but load subroutines
 #       (See item 5 below).  The reason 'require path' is not used instead is
 #       because 'do' doesn't assume that path is in @INC.
@@ -1619,16 +1647,22 @@ GCB_V: Grapheme_Cluster_Break=V
 # million code points.  The results would not change unless utf8.h decides it
 # wants a maximum other than 4 bytes, or this program creates better
 # optimizations
-#UTF8_CHAR: Matches utf8 from 1 to 4 bytes
-#=> UTF8 :safe only_ascii_platform
+#
+# NOTE: The number of bytes generated here must match the value in
+# IS_UTF8_CHAR_FAST in utf8.h
+#
+#UTF8_CHAR: Matches legal UTF-8 encoded characters from 1 to 4 bytes
+#=> UTF8 :fast only_ascii_platform
 #0x0 - 0x1FFFFF
 
-# This hasn't been commented out, because we haven't an EBCDIC platform to run
-# it on, and the 3 types of EBCDIC allegedly supported by Perl would have
-# different results
-UTF8_CHAR: Matches utf8 from 1 to 5 bytes
-=> UTF8 :safe only_ebcdic_platform
-0x0 - 0x3FFFFF:
+# This hasn't been commented out, but the number of bytes it works on has been
+# cut down to 3, so it doesn't cover the full legal Unicode range.  Making it
+# 5 bytes would cover beyond the full range, but takes quite a bit of time and
+# memory to calculate.  The generated table varies depending on the EBCDIC
+# code page.
+UTF8_CHAR: Matches legal UTF-EBCDIC encoded characters from 1 to 3 bytes
+=> UTF8 :fast only_ebcdic_platform
+0x0 - 0x3FFF
 
 QUOTEMETA: Meta-characters that \Q should quote
 => high :fast
@@ -1636,7 +1670,6 @@ QUOTEMETA: Meta-characters that \Q should quote
 
 MULTI_CHAR_FOLD: multi-char strings that are folded to by a single character
 => UTF8 :safe
-do regen/regcharclass_multi_char_folds.pl
 
 # 1 => All folds
 &regcharclass_multi_char_folds::multi_char_folds(1)
@@ -1660,5 +1693,5 @@ PROBLEMATIC_LOCALE_FOLDEDS_START : The first folded character of folds which are
 \p{_Perl_Problematic_Locale_Foldeds_Start}
 
 PATWS: pattern white space
-=> generic generic_non_low cp : safe
+=> generic generic_non_low cp : fast safe
 \p{PatWS}

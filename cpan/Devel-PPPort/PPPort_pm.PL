@@ -547,6 +547,7 @@ sub WriteFile
   $copy =~ s/\bppport\.h\b/$file/g;
 
   open F, ">$file" or return undef;
+  #This was commented out print F $copy;
   print F $copy;
   close F;
 

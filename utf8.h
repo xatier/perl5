@@ -104,8 +104,33 @@ EXTCONST unsigned char PL_utf8skip[] = {
 /* 0xFE */ 7,13, /* Perl extended (never was official UTF-8).  Up to 72bit
 		    allowed (64-bit + reserved). */
 };
+#if 0
+    EXTCONST unsigned char PL_e2a[] = { /* EBCDIC (IBM-1047) to ASCII (iso-8859-1) */
+        0x00, 0x01, 0x02, 0x03, 0x9C, 0x09, 0x86, 0x7F, 0x97, 0x8D, 0x8E, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+        0x10, 0x11, 0x12, 0x13, 0x9D, 0x0A, 0x08, 0x87, 0x18, 0x19, 0x92, 0x8F, 0x1C, 0x1D, 0x1E, 0x1F,
+        0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x17, 0x1B, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x05, 0x06, 0x07,
+        0x90, 0x91, 0x16, 0x93, 0x94, 0x95, 0x96, 0x04, 0x98, 0x99, 0x9A, 0x9B, 0x14, 0x15, 0x9E, 0x1A,
+        0x20, 0xA0, 0xE2, 0xE4, 0xE0, 0xE1, 0xE3, 0xE5, 0xE7, 0xF1, 0xA2, 0x2E, 0x3C, 0x28, 0x2B, 0x7C,
+        0x26, 0xE9, 0xEA, 0xEB, 0xE8, 0xED, 0xEE, 0xEF, 0xEC, 0xDF, 0x21, 0x24, 0x2A, 0x29, 0x3B, 0x5E,
+        0x2D, 0x2F, 0xC2, 0xC4, 0xC0, 0xC1, 0xC3, 0xC5, 0xC7, 0xD1, 0xA6, 0x2C, 0x25, 0x5F, 0x3E, 0x3F,
+        0xF8, 0xC9, 0xCA, 0xCB, 0xC8, 0xCD, 0xCE, 0xCF, 0xCC, 0x60, 0x3A, 0x23, 0x40, 0x27, 0x3D, 0x22,
+        0xD8, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0xAB, 0xBB, 0xF0, 0xFD, 0xFE, 0xB1,
+        0xB0, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0xAA, 0xBA, 0xE6, 0xB8, 0xC6, 0xA4,
+        0xB5, 0x7E, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0xA1, 0xBF, 0xD0, 0x5B, 0xDE, 0xAE,
+        0xAC, 0xA3, 0xA5, 0xB7, 0xA9, 0xA7, 0xB6, 0xBC, 0xBD, 0xBE, 0xDD, 0xA8, 0xAF, 0x5D, 0xB4, 0xD7,
+        0x7B, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0xAD, 0xF4, 0xF6, 0xF2, 0xF3, 0xF5,
+        0x7D, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, 0x50, 0x51, 0x52, 0xB9, 0xFB, 0xFC, 0xF9, 0xFA, 0xFF,
+        0x5C, 0xF7, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, 0xB2, 0xD4, 0xD6, 0xD2, 0xD3, 0xD5,
+        0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0xB3, 0xDB, 0xDC, 0xD9, 0xDA, 0x9F
+        };
+#endif
+
 #else
 EXTCONST unsigned char PL_utf8skip[];
+#if 0
+EXTCONST unsigned char PL_e2a[];
+EXTCONST unsigned char PL_a2e[];
+#   endif
 #endif
 
 END_EXTERN_C
@@ -114,6 +139,10 @@ END_EXTERN_C
  * platforms */
 #define NATIVE_TO_LATIN1(ch)     (ch)
 #define LATIN1_TO_NATIVE(ch)     (ch)
+#if 0
+#define NATIVE_TO_LATIN1(ch)            PL_e2a[(U8)(ch)]
+#define LATIN1_TO_NATIVE(ch)            PL_a2e[(U8)(ch)]
+#endif
 
 /* I8 is an intermediate version of UTF-8 used only in UTF-EBCDIC.  We thus
  * consider it to be identical to UTF-8 on ASCII platforms.  Strictly speaking
@@ -127,6 +156,10 @@ END_EXTERN_C
 /* Transforms in wide UV chars */
 #define UNI_TO_NATIVE(ch)        (ch)
 #define NATIVE_TO_UNI(ch)        (ch)
+#if 0
+define NATIVE_TO_UNI(ch)        (((ch) > 255) ? (ch) : NATIVE_TO_LATIN1(ch))
+#define UNI_TO_NATIVE(ch)        (((ch) > 255) ? (ch) : LATIN1_TO_NATIVE(ch))
+#endif
 
 /*
 
@@ -177,7 +210,7 @@ Perl's extended UTF-8 means we can have start bytes up to FF.
 
 /* Is the representation of the Unicode code point 'c' the same regardless of
  * being encoded in UTF-8 or not? */
-#define UNI_IS_INVARIANT(c)		(((UV)c) <  0x80)
+#define OFFUNI_IS_INVARIANT(c)		(((UV)c) <  0x80)
 
 /* Is the UTF8-encoded byte 'c' part of a variant sequence in UTF-8?  This is
  * the inverse of UTF8_IS_INVARIANT */
@@ -273,6 +306,7 @@ Perl's extended UTF-8 means we can have start bytes up to FF.
 #define MAX_UTF8_TWO_BYTE 0x7FF
 
 #define UTF8_MAXBYTES_CASE	UTF8_MAXBYTES
+#define isEBCDIC 0
 
 #endif /* EBCDIC vs ASCII */
 
@@ -337,14 +371,14 @@ Perl's extended UTF-8 means we can have start bytes up to FF.
  * works on both UTF-8 encoded strings and non-encoded, as it returns TRUE in
  * each for the exact same set of bit patterns.  (And it works on any byte in a
  * UTF-8 encoded string) */
-#define UTF8_IS_INVARIANT(c)		UNI_IS_INVARIANT(NATIVE_UTF8_TO_I8(c))
+#define UTF8_IS_INVARIANT(c)	OFFUNI_IS_INVARIANT(NATIVE_UTF8_TO_I8(c))
 
 /* Like the above, but its name implies a non-UTF8 input, and is implemented
  * differently (for no particular reason) */
-#define NATIVE_BYTE_IS_INVARIANT(c)	UNI_IS_INVARIANT(NATIVE_TO_LATIN1(c))
+#define NATIVE_BYTE_IS_INVARIANT(c)	OFFUNI_IS_INVARIANT(NATIVE_TO_LATIN1(c))
 
 /* Like the above, but accepts any UV as input */
-#define UVCHR_IS_INVARIANT(uv)          UNI_IS_INVARIANT(NATIVE_TO_UNI(uv))
+#define UVCHR_IS_INVARIANT(uv)          OFFUNI_IS_INVARIANT(NATIVE_TO_UNI(uv))
 
 #define MAX_PORTABLE_UTF8_TWO_BYTE 0x3FF    /* constrained by EBCDIC */
 
@@ -570,6 +604,7 @@ Perl's extended UTF-8 means we can have start bytes up to FF.
 #define UNI_DISPLAY_QQ		(UNI_DISPLAY_ISPRINT|UNI_DISPLAY_BACKSLASH)
 #define UNI_DISPLAY_REGEX	(UNI_DISPLAY_ISPRINT|UNI_DISPLAY_BACKSLASH)
 
+/* deprecate */
 #define ANYOF_FOLD_SHARP_S(node, input, end)	\
 	(ANYOF_BITMAP_TEST(node, LATIN_SMALL_LETTER_SHARP_S) && \
 	 (ANYOF_NONBITMAP(node)) && \
@@ -577,23 +612,55 @@ Perl's extended UTF-8 means we can have start bytes up to FF.
 	 ((end) > (input) + 1) && \
 	 toFOLD((input)[0]) == 's' && \
 	 toFOLD((input)[1]) == 's')
+
+/* deprecate */
 #define SHARP_S_SKIP 2
 
 /* If you want to exclude surrogates, and beyond legal Unicode, see the blame
  * log for earlier versions which gave details for these */
 
+/* regen/regcharclass.pl generates is_UTF8_CHAR_utf8() macros for up to these
+ * number of bytes.  So this has to be coordinated with it */
+#ifdef EBCDIC
+#   define IS_UTF8_CHAR_FAST(n) ((n) <= 3)
+#else
+#   define IS_UTF8_CHAR_FAST(n) ((n) <= 4)
+#endif
+
 #ifndef EBCDIC
 /* This was generated by regen/regcharclass.pl, and then moved here.  The lines
  * that generated it were then commented out.  This was done solely because it
- * takes on the order of 10 minutes to generate, and is never going to change.
- * The EBCDIC equivalent hasn't been commented out in regcharclass.pl, so it
- * should generate and run the correct stuff */
+ * takes on the order of 10 minutes to generate, and is never going to change,
+ * unless the code generated is improved.  This is self-adapting
+ *
+ * The EBCDIC versions have been cut to not cover all of legal Unicode, so
+ * don't take too long to generate, and there is a separate one for each code
+ * page. XXX They are so complicated, that I wonder if it might be as fast to
+ * just always use is_utf8_char_slow() for EBCDIC */
 /*
-	UTF8_CHAR: Matches utf8 from 1 to 4 bytes
+	UTF8_CHAR: Matches legal UTF-8 encoded characters from 1 to 4 bytes
 
 	0x0 - 0x1FFFFF
 */
 /*** GENERATED CODE ***/
+#define is_UTF8_CHAR_utf8(s)                                                \
+( ( ( ((U8*)s)[0] & 0x80 ) == 0x00 ) ? 1                                    \
+: ( 0xC2 <= ((U8*)s)[0] && ((U8*)s)[0] <= 0xDF ) ?                          \
+    2                                                                       \
+: ( 0xE0 == ((U8*)s)[0] ) ?                                                 \
+    ( ( ((U8*)s)[1] >= 0xA0 ) ?                                             \
+	3                                                                   \
+    : 0 )                                                                   \
+: ( 0xE1 <= ((U8*)s)[0] && ((U8*)s)[0] <= 0xEF ) ?                          \
+    3                                                                       \
+: ( 0xF0 == ((U8*)s)[0] ) ?                                                 \
+    ( ( ((U8*)s)[1] >= 0x90 ) ?                                             \
+	4                                                                   \
+    : 0 )                                                                   \
+: ( 0xF1 <= ((U8*)s)[0] && ((U8*)s)[0] <= 0xF7 ) ?                          \
+    4                                                                       \
+: 0 )
+
 #define is_UTF8_CHAR_utf8_safe(s,e)                                         \
 ( ((e)-(s) > 3) ?                                                           \
     ( ( ( ((U8*)s)[0] & 0x80 ) == 0x00 ) ? 1                                \
@@ -619,24 +686,17 @@ Perl's extended UTF-8 means we can have start bytes up to FF.
 : ((e)-(s) > 0) ?                                                           \
     ( ( ((U8*)s)[0] & 0x80 ) == 0x00 )                                      \
 : 0 )
+
 #endif
 
-/* IS_UTF8_CHAR(p) is strictly speaking wrong (not UTF-8) because it
- * (1) allows UTF-8 encoded UTF-16 surrogates
- * (2) it allows code points past U+10FFFF.
- * The Perl_is_utf8_char() full "slow" code will handle the Perl
- * "extended UTF-8". */
-#ifdef is_UTF8_CHAR_utf8_safe
-#   define IS_UTF8_CHAR(p, n)      (is_UTF8_CHAR_utf8_safe(p, (p) + (n)) == n)
-#endif
-
-/* regen/regcharclass.pl generates is_UTF8_CHAR_utf8_safe() macros for up to
- * these number of bytes.  So this has to be coordinated with it */
-#ifdef EBCDIC
-#   define IS_UTF8_CHAR_FAST(n) ((n) <= 5)
-#else
-#   define IS_UTF8_CHAR_FAST(n) ((n) <= 4)
-#endif
+/* IS_UTF8_CHAR(p, n) returns the number of bytes in the UTF-8 encoded
+ * character starting at 'p' looking at no more than 'n' bytes, or 0 if
+ * malformed. */
+#define IS_UTF8_CHAR(s, e)  (((e) <= (s) || ((e) - (s)) < UTF8SKIP(s)) \
+                            ? 0                                        \
+                            : (IS_UTF8_CHAR_FAST(UTF8SKIP(s)))         \
+                              ? is_UTF8_CHAR_utf8_safe(s, e)                   \
+                              : is_utf8_char_slow(s, e))
 
 #endif /* H_UTF8 */
 

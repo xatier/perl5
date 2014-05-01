@@ -837,6 +837,7 @@ Characters in Pod documents may be conveyed either as literals, or by
 number in EE<lt>n> codes, or by an equivalent mnemonic, as in
 EE<lt>eacute> which is exactly equivalent to EE<lt>233>.
 
+XXX
 Characters in the range 32-126 refer to those well known US-ASCII
 characters (also defined there by Unicode, with the same meaning),
 which all Pod formatters must render faithfully.  Characters

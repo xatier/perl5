@@ -1144,3 +1144,6 @@ metaphor, so being meta is, after all, what it's for.
 This document was originally written by Nathan Torkington, and is
 maintained by the perl5-porters mailing list.
 
+=head1 EBCDIC
+
+\xFC and DC are u umlaut, reversed caps

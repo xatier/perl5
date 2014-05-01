@@ -1480,6 +1480,7 @@ EXTCONST U32 PL_charclass[];
                                                            _CC_WORDCHAR, c)
 #define isXDIGIT_LC_uvchr(c) _generic_LC_uvchr(isXDIGIT_LC, is_XDIGIT_cp_high, c)
 
+/* Probably should deprecate */
 #define isBLANK_LC_uni(c)	isBLANK_LC_uvchr(UNI_TO_NATIVE(c))
 
 /* For internal core Perl use only: the base macros for defining macros like

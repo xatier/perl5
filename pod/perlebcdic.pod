@@ -654,7 +654,7 @@ Also, "\t" is a C<HORIZONTAL TABULATION> character so that:
     $is_ascii  = ord("\t") == 9;
     $is_ebcdic = ord("\t") == 5;
 
-To distinguish EBCDIC code pages try looking at one or more of
+To distinguish between EBCDIC code pages try looking at one or more of
 the characters that differ between them.  For example:
 
     $is_ebcdic_37   = "\n" eq chr(37);
@@ -877,6 +877,8 @@ encoding.  Examples of usage on EBCDIC include:
 
 =item print()
 
+XXX utf8::unicode_to_native()
+
 One must be careful with scalars and strings that are passed to
 print that contain ASCII encodings.  One common place
 for this to occur is in the output of the MIME type header for
@@ -963,6 +965,7 @@ set of subs:
         $char =~ /[\200-\237]/;
     }
 
+    rename
     sub is_latin_1 {    # But not ASCII; not C1
         my $char = substr(shift,0,1);
         $char =~ /[\240-\377]/;
@@ -983,7 +986,7 @@ work on any platform as follows:
 
         return $char =~ /[[:print:]]/ && $char =~ /[[:ascii:]]/;
 
-        # Alternatively:
+        # Alternatively: 
         # return $char
         #      =~ /[ !"\#\$%&'()*+,\-.\/0-9:;<=>?\@A-Z[\\\]^_`a-z{|}~]/;
     }
@@ -1364,14 +1367,6 @@ or z/OS.
 XXX.
 
 =head1 BUGS
-
-This pod document contains literal Latin 1 characters and may encounter
-translation difficulties.  In particular one popular nroff implementation
-was known to strip accented characters to their unaccented counterparts
-while attempting to view this document through the B<pod2man> program
-(for example, you may see a plain C<y> rather than one with a diaeresis
-as in E<yuml>).  Another nroff truncated the resultant manpage at
-the first occurrence of 8 bit characters.
 
 Not all shells will allow multiple C<-e> string arguments to perl to
 be concatenated together properly as recipes 0, 2, 4, 5, and 6 might

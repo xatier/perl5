@@ -3177,6 +3177,7 @@ S_scan_const(pTHX_ char *start)
 
 		i = d - SvPVX_const(sv);		/* remember current offset */
 #ifdef EBCDIC
+                /* I'm unclear about this */
                 SvGROW(sv,
 		       SvLEN(sv) + (has_utf8 ?
 				    (512 - UTF_CONTINUATION_MARK +
@@ -3624,7 +3625,7 @@ S_scan_const(pTHX_ char *start)
 			}
 
                         /* Add the (Unicode) code point to the output. */
-			if (UNI_IS_INVARIANT(uv)) {
+			if (OFFUNI_IS_INVARIANT(uv)) {
 			    *d++ = (char) LATIN1_TO_NATIVE(uv);
 			}
 			else {

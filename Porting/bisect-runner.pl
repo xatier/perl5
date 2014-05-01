@@ -1166,6 +1166,7 @@ sub match_and_exit {
         while (<$fh>) {
             if ($_ =~ $re) {
                 ++$matches;
+                # Wrong for EBCDIC
                 if (tr/\t\r\n -~\200-\377//c) {
                     print "Binary file $file matches\n";
                 } else {

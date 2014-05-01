@@ -7806,6 +7806,7 @@ S_reginclass(pTHX_ regexp * const prog, const regnode * const n, const U8* const
 		    utf8_p = utf8_buffer;
                     append_utf8_from_native_byte(*p, &utf8_p);
 		    utf8_p = utf8_buffer;
+		    /* look for other occurrences bytes_to_utf8(utf8_p, &len); */
 		}
 
 		if (swash_fetch(sw, utf8_p, TRUE)) {

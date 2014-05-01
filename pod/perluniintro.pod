@@ -237,6 +237,7 @@ additional conversions are needed at every step.
 Later Perl releases have added code that will not work on EBCDIC platforms, and
 no one has complained, so the divergence has continued.  If you want to run
 Perl on an EBCDIC platform, send email to perlbug@perl.org
+XXX
 
 On EBCDIC platforms, the internal Unicode encoding form is UTF-EBCDIC
 instead of UTF-8.  The difference is that as UTF-8 is "ASCII-safe" in
